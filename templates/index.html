@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Inventario con Escáner</title>
+</head>
+<body>
+  <h1>Registro de Inventario</h1>
+  <form action="/guardar" method="post">
+    <label>Código de barras:<br>
+      <input type="text" name="codigo" autofocus required>
+    </label><br><br>
+    <label>Nombre del producto:<br>
+      <input type="text" name="nombre" required>
+    </label><br><br>
+    <label>Cantidad:<br>
+      <input type="number" name="cantidad" required>
+    </label><br><br>
+    <button type="submit">Guardar</button>
+  </form>
+</body>
+</html>
