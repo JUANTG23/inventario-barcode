@@ -1,9 +1,9 @@
 from flask import Flask, render_template, request, redirect
 import csv
 from datetime import datetime
+import os
 
 app = Flask(__name__)
-
 CSV_FILE = 'inventario.csv'
 
 def init_csv():
@@ -31,18 +31,11 @@ def guardar():
 
     return redirect('/')
 
-import os
-
-if __name__ == '__main__':
-    init_csv()
-    port = int(os.environ.get("PORT", 5000))
-    app.run(debug=False, host='0.0.0.0', port=port)
-
 @app.route('/lista')
 def lista():
     with open(CSV_FILE, newline='', encoding='utf-8') as file:
         reader = csv.reader(file)
-        next(reader)  # Saltar la cabecera
+        next(reader)
         inventario = list(reader)
     return render_template('lista.html', inventario=inventario)
 
@@ -53,11 +46,17 @@ def buscar():
         codigo_buscado = request.form['codigo']
         with open(CSV_FILE, newline='', encoding='utf-8') as file:
             reader = csv.reader(file)
-            next(reader)  # Saltar la cabecera
+            next(reader)
             for fila in reader:
                 if fila[0] == codigo_buscado:
                     resultado = fila
                     break
             if resultado is None:
-                resultado = []  # Para mostrar "no encontrado"
+                resultado = []
     return render_template('buscar.html', resultado=resultado)
+
+# 👇 Esto va al final
+if __name__ == '__main__':
+    init_csv()
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)
