@@ -1,25 +1,114 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Inventario</title>
+    <meta charset="UTF-8">
+    <title>Inventario</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px #ccc;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+        input, button {
+            display: block;
+            margin-top: 10px;
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #aaa;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .nav-buttons a {
+            flex: 1;
+            text-align: center;
+            text-decoration: none;
+            background: #2196F3;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .nav-buttons a:hover {
+            background: #1976D2;
+        }
+        #reader {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-  <h1>📦 Registro de producto</h1>
-  <form action="/guardar" method="POST">
-    <label>Código de barras:</label><br>
-    <input type="text" name="codigo" required><br><br>
+    <h1>Registro de Productos</h1>
 
-    <label>Nombre:</label><br>
-    <input type="text" name="nombre" required><br><br>
+    <div class="nav-buttons">
+        <a href="/lista">📋 Ver productos</a>
+        <a href="/buscar">🔍 Buscar producto</a>
+    </div>
 
-    <label>Cantidad:</label><br>
-    <input type="number" name="cantidad" required><br><br>
+    <form action="/guardar" method="POST">
+        <label for="codigo">Código de barras:</label>
+        <input type="text" name="codigo" id="codigo" required>
 
-    <button type="submit">Guardar producto</button>
-  </form>
+        <label for="nombre">Nombre del producto:</label>
+        <input type="text" name="nombre" id="nombre" required>
 
-  <br><br>
-  <a href="/lista">📋 Ver productos</a> | <a href="/buscar">🔍 Buscar producto</a>
+        <label for="cantidad">Cantidad:</label>
+        <input type="number" name="cantidad" id="cantidad" required>
+
+        <button type="submit">Guardar producto</button>
+        <button type="button" onclick="iniciarScanner()">📷 Escanear con cámara</button>
+    </form>
+
+    <div id="reader"></div>
+
+    <script>
+        function iniciarScanner() {
+            const html5QrCode = new Html5Qrcode("reader");
+
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length) {
+                    let cameraId = devices[0].id;
+
+                    html5QrCode.start(
+                        cameraId,
+                        { fps: 10, qrbox: 250 },
+                        qrCodeMessage => {
+                            document.getElementById("codigo").value = qrCodeMessage;
+                            html5QrCode.stop();
+                            document.getElementById("reader").innerHTML = "";
+                        },
+                        errorMessage => {
+                            // puedes mostrar errores si quieres
+                        }
+                    ).catch(err => {
+                        console.error("No se pudo iniciar la cámara:", err);
+                    });
+                }
+            });
+        }
+    </script>
 </body>
 </html>
