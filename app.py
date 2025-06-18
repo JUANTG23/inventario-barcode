@@ -4,11 +4,12 @@ from datetime import datetime
 import os
 
 app = Flask(__name__)
+
 CSV_FILE = 'inventario.csv'
 
 def init_csv():
     if not os.path.exists(CSV_FILE):
-        with open(CSV_FILE, 'w', newline='', encoding='utf-8') as file:
+        with open(CSV_FILE, 'w', newline='', encoding='latin-1') as file:
             writer = csv.writer(file)
             writer.writerow(['Código de barras', 'Nombre', 'Cantidad', 'Fecha'])
 
@@ -18,15 +19,12 @@ def index():
 
 @app.route('/guardar', methods=['POST'])
 def guardar():
-    codigo = request.form.get('codigo', '').strip()
-    nombre = request.form.get('nombre', '').strip()
-    cantidad = request.form.get('cantidad', '').strip()
+    codigo = request.form['codigo']
+    nombre = request.form['nombre']
+    cantidad = request.form['cantidad']
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    if not codigo or not nombre or not cantidad:
-        return "Error: todos los campos son obligatorios.", 400
-
-    with open(CSV_FILE, 'a', newline='', encoding='utf-8') as file:
+    with open(CSV_FILE, 'a', newline='', encoding='latin-1') as file:
         writer = csv.writer(file)
         writer.writerow([codigo, nombre, cantidad, fecha])
 
@@ -35,28 +33,36 @@ def guardar():
 @app.route('/lista')
 def lista():
     inventario = []
-    with open(CSV_FILE, newline='', encoding='utf-8') as file:
-        reader = csv.reader(file)
-        next(reader, None)
-        for fila in reader:
-            if len(fila) == 4:
-                inventario.append(fila)
+    try:
+        with open(CSV_FILE, newline='', encoding='latin-1') as file:
+            reader = csv.reader(file)
+            next(reader, None)  # Saltar encabezado
+            for fila in reader:
+                if len(fila) == 4:
+                    inventario.append(fila)
+    except Exception as e:
+        print(f"❌ Error leyendo CSV: {e}")
+        inventario = []
     return render_template('lista.html', inventario=inventario)
 
 @app.route('/buscar', methods=['GET', 'POST'])
 def buscar():
     resultado = None
     if request.method == 'POST':
-        codigo_buscado = request.form['codigo'].strip()
-        with open(CSV_FILE, newline='', encoding='utf-8') as file:
-            reader = csv.reader(file)
-            next(reader, None)
-            for fila in reader:
-                if len(fila) >= 1 and fila[0] == codigo_buscado:
-                    resultado = fila
-                    break
+        codigo_buscado = request.form['codigo']
+        try:
+            with open(CSV_FILE, newline='', encoding='latin-1') as file:
+                reader = csv.reader(file)
+                next(reader, None)  # Saltar encabezado
+                for fila in reader:
+                    if fila[0] == codigo_buscado:
+                        resultado = fila
+                        break
             if resultado is None:
                 resultado = []
+        except Exception as e:
+            print(f"❌ Error leyendo CSV en buscar: {e}")
+            resultado = []
     return render_template('buscar.html', resultado=resultado)
 
 if __name__ == '__main__':
