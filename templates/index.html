@@ -2,113 +2,63 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Inventario</title>
+    <title>Inventario con Escáner</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
-            background: #f4f4f4;
-        }
-        h1 {
-            color: #333;
-        }
-        form {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px #ccc;
-            max-width: 400px;
-            margin-bottom: 20px;
-        }
-        input, button {
-            display: block;
-            margin-top: 10px;
-            width: 100%;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #aaa;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            cursor: pointer;
-            border: none;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .nav-buttons {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .nav-buttons a {
-            flex: 1;
             text-align: center;
-            text-decoration: none;
-            background: #2196F3;
-            color: white;
+        }
+
+        input, button {
             padding: 10px;
-            border-radius: 4px;
+            margin: 10px;
+            width: 80%;
+            max-width: 400px;
+            font-size: 16px;
         }
-        .nav-buttons a:hover {
-            background: #1976D2;
-        }
+
         #reader {
-            margin-top: 20px;
+            width: 300px;
+            margin: auto;
         }
     </style>
 </head>
 <body>
-    <h1>Registro de Productos</h1>
-
-    <div class="nav-buttons">
-        <a href="/lista">📋 Ver productos</a>
-        <a href="/buscar">🔍 Buscar producto</a>
-    </div>
-
-    <form action="/guardar" method="POST">
-        <label for="codigo">Código de barras:</label>
-        <input type="text" name="codigo" id="codigo" required>
-
-        <label for="nombre">Nombre del producto:</label>
-        <input type="text" name="nombre" id="nombre" required>
-
-        <label for="cantidad">Cantidad:</label>
-        <input type="number" name="cantidad" id="cantidad" required>
-
-        <button type="submit">Guardar producto</button>
-        <button type="button" onclick="iniciarScanner()">📷 Escanear con cámara</button>
-    </form>
+    <h1>📦 Sistema de Inventario</h1>
 
     <div id="reader"></div>
 
+    <form action="/guardar" method="post">
+        <input type="text" name="codigo" id="codigo" placeholder="Código de barras escaneado" readonly required>
+        <input type="text" name="nombre" placeholder="Nombre del producto" required>
+        <input type="number" name="cantidad" placeholder="Cantidad" required>
+        <button type="submit">Guardar producto</button>
+    </form>
+
+    <div>
+        <a href="/lista"><button>📋 Ver productos</button></a>
+        <a href="/buscar"><button>🔍 Buscar por código</button></a>
+    </div>
+
     <script>
-        function iniciarScanner() {
-            const html5QrCode = new Html5Qrcode("reader");
+        const html5QrCode = new Html5Qrcode("reader");
+        const config = { fps: 10, qrbox: 250 };
 
-            Html5Qrcode.getCameras().then(devices => {
-                if (devices && devices.length) {
-                    let cameraId = devices[0].id;
-
-                    html5QrCode.start(
-                        cameraId,
-                        { fps: 10, qrbox: 250 },
-                        qrCodeMessage => {
-                            document.getElementById("codigo").value = qrCodeMessage;
-                            html5QrCode.stop();
-                            document.getElementById("reader").innerHTML = "";
-                        },
-                        errorMessage => {
-                            // puedes mostrar errores si quieres
-                        }
-                    ).catch(err => {
-                        console.error("No se pudo iniciar la cámara:", err);
-                    });
-                }
-            });
-        }
+        Html5Qrcode.getCameras().then(devices => {
+            if (devices && devices.length) {
+                const backCamera = devices.find(d => d.label.toLowerCase().includes('back')) || devices[0];
+                html5QrCode.start(
+                    { deviceId: { exact: backCamera.id } },
+                    config,
+                    qrCodeMessage => {
+                        document.getElementById('codigo').value = qrCodeMessage;
+                        html5QrCode.stop();
+                    }
+                ).catch(err => console.error("Error al iniciar cámara", err));
+            }
+        }).catch(err => console.error("Error al obtener cámaras", err));
     </script>
 </body>
 </html>
