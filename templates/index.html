@@ -2,21 +2,44 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Inventario con Escáner</title>
+  <title>Inventario - Escáner</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
   <h1>Registro de Inventario</h1>
+
+  <div id="reader" style="width:300px;"></div>
+  <p><strong>Código escaneado:</strong> <span id="codigo_resultado"></span></p>
+
   <form action="/guardar" method="post">
-    <label>Código de barras:<br>
-      <input type="text" name="codigo" autofocus required>
-    </label><br><br>
+    <input type="hidden" name="codigo" id="codigo">
+
     <label>Nombre del producto:<br>
       <input type="text" name="nombre" required>
     </label><br><br>
+
     <label>Cantidad:<br>
       <input type="number" name="cantidad" required>
     </label><br><br>
+
     <button type="submit">Guardar</button>
   </form>
+
+  <script>
+    const codigoInput = document.getElementById("codigo");
+    const codigoResultado = document.getElementById("codigo_resultado");
+
+    function onScanSuccess(decodedText) {
+      codigoResultado.innerText = decodedText;
+      codigoInput.value = decodedText;
+    }
+
+    const html5QrCode = new Html5Qrcode("reader");
+    html5QrCode.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      onScanSuccess
+    );
+  </script>
 </body>
 </html>

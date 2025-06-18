@@ -31,6 +31,17 @@ def guardar():
 
     return redirect('/')
 
+import os
+
 if __name__ == '__main__':
     init_csv()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)
+
+@app.route('/lista')
+def lista():
+    with open(CSV_FILE, newline='', encoding='utf-8') as file:
+        reader = csv.reader(file)
+        next(reader)  # Saltar la cabecera
+        inventario = list(reader)
+    return render_template('lista.html', inventario=inventario)

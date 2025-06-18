@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Lista de Inventario</title>
+</head>
+<body>
+  <h1>Inventario registrado</h1>
+  <a href="/">← Volver al escáner</a>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>Código</th>
+        <th>Nombre</th>
+        <th>Cantidad</th>
+        <th>Fecha</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for fila in inventario %}
+      <tr>
+        <td>{{ fila[0] }}</td>
+        <td>{{ fila[1] }}</td>
+        <td>{{ fila[2] }}</td>
+        <td>{{ fila[3] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
