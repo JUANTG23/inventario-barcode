@@ -1,28 +1,29 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Lista de Inventario</title>
+  <title>Inventario Registrado</title>
 </head>
 <body>
-  <h1>Inventario registrado</h1>
-  <a href="/">← Volver al escáner</a>
-  <table border="1">
+  <h1>📋 Lista de Productos</h1>
+  <a href="/">← Volver al escáner</a> | <a href="/buscar">Buscar producto</a>
+  <br><br>
+  <table border="1" cellpadding="8">
     <thead>
       <tr>
-        <th>Código</th>
+        <th>Código de barras</th>
         <th>Nombre</th>
         <th>Cantidad</th>
         <th>Fecha</th>
       </tr>
     </thead>
     <tbody>
-      {% for fila in inventario %}
+      {% for producto in inventario %}
       <tr>
-        <td>{{ fila[0] }}</td>
-        <td>{{ fila[1] }}</td>
-        <td>{{ fila[2] }}</td>
-        <td>{{ fila[3] }}</td>
+        <td>{{ producto[0] }}</td>
+        <td>{{ producto[1] }}</td>
+        <td>{{ producto[2] }}</td>
+        <td>{{ producto[3] }}</td>
       </tr>
       {% endfor %}
     </tbody>
