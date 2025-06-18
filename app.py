@@ -45,3 +45,19 @@ def lista():
         next(reader)  # Saltar la cabecera
         inventario = list(reader)
     return render_template('lista.html', inventario=inventario)
+
+@app.route('/buscar', methods=['GET', 'POST'])
+def buscar():
+    resultado = None
+    if request.method == 'POST':
+        codigo_buscado = request.form['codigo']
+        with open(CSV_FILE, newline='', encoding='utf-8') as file:
+            reader = csv.reader(file)
+            next(reader)  # Saltar la cabecera
+            for fila in reader:
+                if fila[0] == codigo_buscado:
+                    resultado = fila
+                    break
+            if resultado is None:
+                resultado = []  # Para mostrar "no encontrado"
+    return render_template('buscar.html', resultado=resultado)

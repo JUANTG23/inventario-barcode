@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Buscar Producto</title>
+</head>
+<body>
+  <h1>Buscar producto por código</h1>
+  <a href="/">← Volver al escáner</a> | <a href="/lista">Ver todos</a>
+  
+  <form method="post">
+    <label>Ingrese el código de barras:<br>
+      <input type="text" name="codigo" required>
+    </label>
+    <button type="submit">Buscar</button>
+  </form>
+
+  {% if resultado %}
+    <h2>Resultado:</h2>
+    <p><strong>Código:</strong> {{ resultado[0] }}</p>
+    <p><strong>Nombre:</strong> {{ resultado[1] }}</p>
+    <p><strong>Cantidad:</strong> {{ resultado[2] }}</p>
+    <p><strong>Fecha:</strong> {{ resultado[3] }}</p>
+  {% elif resultado is not none %}
+    <p style="color:red;">Producto no encontrado</p>
+  {% endif %}
+</body>
+</html>
