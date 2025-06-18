@@ -23,6 +23,14 @@
             width: 300px;
             margin: auto;
         }
+
+        .botones {
+            margin-top: 20px;
+        }
+
+        .botones a {
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -37,9 +45,10 @@
         <button type="submit">Guardar producto</button>
     </form>
 
-    <div>
+    <div class="botones">
         <a href="/lista"><button>📋 Ver productos</button></a>
         <a href="/buscar"><button>🔍 Buscar por código</button></a>
+        <a href="/descargar"><button>⬇️ Descargar inventario CSV</button></a>
     </div>
 
     <script>
