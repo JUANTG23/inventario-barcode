@@ -2,31 +2,31 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Inventario Registrado</title>
+  <title>Lista de productos</title>
 </head>
 <body>
-  <h1>📋 Lista de Productos</h1>
-  <a href="/">← Volver al escáner</a> | <a href="/buscar">Buscar producto</a>
-  <br><br>
-  <table border="1" cellpadding="8">
-    <thead>
+  <h1>📋 Inventario registrado</h1>
+  {% if inventario %}
+    <table border="1">
       <tr>
-        <th>Código de barras</th>
+        <th>Código</th>
         <th>Nombre</th>
         <th>Cantidad</th>
         <th>Fecha</th>
       </tr>
-    </thead>
-    <tbody>
-      {% for producto in inventario %}
-      <tr>
-        <td>{{ producto[0] }}</td>
-        <td>{{ producto[1] }}</td>
-        <td>{{ producto[2] }}</td>
-        <td>{{ producto[3] }}</td>
-      </tr>
+      {% for item in inventario %}
+        <tr>
+          <td>{{ item[0] }}</td>
+          <td>{{ item[1] }}</td>
+          <td>{{ item[2] }}</td>
+          <td>{{ item[3] }}</td>
+        </tr>
       {% endfor %}
-    </tbody>
-  </table>
+    </table>
+  {% else %}
+    <p>No hay productos registrados.</p>
+  {% endif %}
+  <br>
+  <a href="/">← Volver</a>
 </body>
 </html>

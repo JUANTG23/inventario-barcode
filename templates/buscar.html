@@ -1,28 +1,31 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Buscar Producto</title>
+  <title>Buscar producto</title>
 </head>
 <body>
-  <h1>Buscar producto por código</h1>
-  <a href="/">← Volver al escáner</a> | <a href="/lista">Ver todos</a>
-  
-  <form method="post">
-    <label>Ingrese el código de barras:<br>
-      <input type="text" name="codigo" required>
-    </label>
+  <h1>🔍 Buscar por código</h1>
+  <form method="POST">
+    <label>Código de barras:</label><br>
+    <input type="text" name="codigo" required><br><br>
     <button type="submit">Buscar</button>
   </form>
 
-  {% if resultado %}
-    <h2>Resultado:</h2>
-    <p><strong>Código:</strong> {{ resultado[0] }}</p>
-    <p><strong>Nombre:</strong> {{ resultado[1] }}</p>
-    <p><strong>Cantidad:</strong> {{ resultado[2] }}</p>
-    <p><strong>Fecha:</strong> {{ resultado[3] }}</p>
-  {% elif resultado is not none %}
-    <p style="color:red;">Producto no encontrado</p>
+  {% if resultado is not none %}
+    {% if resultado %}
+      <h3>Resultado:</h3>
+      <ul>
+        <li><strong>Código:</strong> {{ resultado[0] }}</li>
+        <li><strong>Nombre:</strong> {{ resultado[1] }}</li>
+        <li><strong>Cantidad:</strong> {{ resultado[2] }}</li>
+        <li><strong>Fecha:</strong> {{ resultado[3] }}</li>
+      </ul>
+    {% else %}
+      <p>Producto no encontrado.</p>
+    {% endif %}
   {% endif %}
+  <br>
+  <a href="/">← Volver</a>
 </body>
 </html>

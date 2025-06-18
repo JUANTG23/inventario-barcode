@@ -7,12 +7,10 @@ app = Flask(__name__)
 CSV_FILE = 'inventario.csv'
 
 def init_csv():
-    try:
-        with open(CSV_FILE, 'x', newline='') as file:
+    if not os.path.exists(CSV_FILE):
+        with open(CSV_FILE, 'w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             writer.writerow(['Código de barras', 'Nombre', 'Cantidad', 'Fecha'])
-    except FileExistsError:
-        pass
 
 @app.route('/')
 def index():
@@ -20,12 +18,15 @@ def index():
 
 @app.route('/guardar', methods=['POST'])
 def guardar():
-    codigo = request.form['codigo']
-    nombre = request.form['nombre']
-    cantidad = request.form['cantidad']
+    codigo = request.form.get('codigo', '').strip()
+    nombre = request.form.get('nombre', '').strip()
+    cantidad = request.form.get('cantidad', '').strip()
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    with open(CSV_FILE, 'a', newline='') as file:
+    if not codigo or not nombre or not cantidad:
+        return "Error: todos los campos son obligatorios.", 400
+
+    with open(CSV_FILE, 'a', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerow([codigo, nombre, cantidad, fecha])
 
@@ -33,29 +34,31 @@ def guardar():
 
 @app.route('/lista')
 def lista():
+    inventario = []
     with open(CSV_FILE, newline='', encoding='utf-8') as file:
         reader = csv.reader(file)
-        next(reader)
-        inventario = list(reader)
+        next(reader, None)
+        for fila in reader:
+            if len(fila) == 4:
+                inventario.append(fila)
     return render_template('lista.html', inventario=inventario)
 
 @app.route('/buscar', methods=['GET', 'POST'])
 def buscar():
     resultado = None
     if request.method == 'POST':
-        codigo_buscado = request.form['codigo']
+        codigo_buscado = request.form['codigo'].strip()
         with open(CSV_FILE, newline='', encoding='utf-8') as file:
             reader = csv.reader(file)
-            next(reader)
+            next(reader, None)
             for fila in reader:
-                if fila[0] == codigo_buscado:
+                if len(fila) >= 1 and fila[0] == codigo_buscado:
                     resultado = fila
                     break
             if resultado is None:
                 resultado = []
     return render_template('buscar.html', resultado=resultado)
 
-# 👇 Esto va al final
 if __name__ == '__main__':
     init_csv()
     port = int(os.environ.get("PORT", 5000))
