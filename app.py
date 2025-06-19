@@ -1,51 +1,71 @@
 from flask import Flask, render_template, request, redirect, send_file
 import csv
-from datetime import datetime
 import os
+from datetime import datetime
 
 app = Flask(__name__)
-
 CSV_FILE = 'inventario.csv'
+INVENTARIO_TEMP = {}
 
-# Crear archivo CSV si no existe
 def init_csv():
-    try:
-        with open(CSV_FILE, 'x', newline='', encoding='latin-1') as file:
+    if not os.path.exists(CSV_FILE):
+        with open(CSV_FILE, 'w', newline='', encoding='latin-1') as file:
             writer = csv.writer(file)
-            writer.writerow(['Código de barras', 'Nombre', 'Cantidad', 'Fecha'])
-    except FileExistsError:
-        pass
+            writer.writerow(['Código', 'Nombre', 'Cantidad', 'Tipo', 'Fecha'])
 
-# Página principal
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# Guardar producto
 @app.route('/guardar', methods=['POST'])
 def guardar():
     codigo = request.form['codigo']
     nombre = request.form['nombre']
-    cantidad = request.form['cantidad']
+    cantidad = int(request.form['cantidad'])
+    tipo = request.form['tipo']
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    # Leer inventario actual
+    rows = []
+    encontrado = False
+
+    if os.path.exists(CSV_FILE):
+        with open(CSV_FILE, 'r', newline='', encoding='latin-1') as file:
+            reader = csv.reader(file)
+            rows = list(reader)
+
+    # Agregar nueva fila de movimiento
     with open(CSV_FILE, 'a', newline='', encoding='latin-1') as file:
         writer = csv.writer(file)
-        writer.writerow([codigo, nombre, cantidad, fecha])
+        writer.writerow([codigo, nombre, cantidad, tipo, fecha])
 
     return redirect('/')
 
-# Ver productos guardados
 @app.route('/lista')
 def lista():
     inventario = []
-    with open(CSV_FILE, newline='', encoding='latin-1') as file:
-        reader = csv.reader(file)
-        next(reader, None)  # Saltar encabezado
-        inventario = list(reader)
+    movimientos = []
+
+    if os.path.exists(CSV_FILE):
+        with open(CSV_FILE, newline='', encoding='latin-1') as file:
+            reader = csv.reader(file)
+            next(reader, None)
+            for row in reader:
+                codigo, nombre, cantidad, tipo, fecha = row
+                cantidad = int(cantidad)
+                movimientos.append(row)
+
+                encontrado = next((item for item in inventario if item[0] == codigo), None)
+                if encontrado:
+                    if tipo == "Entrada":
+                        encontrado[2] += cantidad
+                    else:
+                        encontrado[2] -= cantidad
+                else:
+                    inventario.append([codigo, nombre, cantidad if tipo == "Entrada" else -cantidad])
+
     return render_template('lista.html', inventario=inventario)
 
-# Buscar por código
 @app.route('/buscar', methods=['GET', 'POST'])
 def buscar():
     resultado = None
@@ -62,12 +82,10 @@ def buscar():
                 resultado = []  # No encontrado
     return render_template('buscar.html', resultado=resultado)
 
-# Descargar inventario CSV
 @app.route('/descargar')
 def descargar():
-    return send_file(CSV_FILE, as_attachment=True, download_name='inventario.csv')
+    return send_file(CSV_FILE, as_attachment=True)
 
-# Ejecutar app
 if __name__ == '__main__':
     init_csv()
     port = int(os.environ.get("PORT", 5000))
