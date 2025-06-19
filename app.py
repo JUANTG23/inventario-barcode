@@ -50,8 +50,9 @@ def lista():
     productos = []
 
     if os.path.isfile(INVENTARIO_CSV):
-        with open(INVENTARIO_CSV, mode="r", encoding="utf-8") as file:
-            reader = csv.DictReader(file)
+        with open(INVENTARIO_CSV, "r", encoding="latin-1") as f:
+            reader = csv.DictReader(f)
+
             for row in reader:
                 try:
                     codigo = row["Código de barras"]
@@ -70,7 +71,7 @@ def lista():
                         )
                     })
                 except KeyError:
-                    continue  # Saltar si falta alguna columna
+                    continue
 
     return render_template("lista.html", productos=productos)
 
