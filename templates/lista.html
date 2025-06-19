@@ -2,45 +2,45 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Lista de Productos</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .low-stock {
-            background-color: #f8d7da !important;
-        }
-        .ok-stock {
-            background-color: #d4edda !important;
-        }
-    </style>
+    <title>Lista de Inventario</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <div class="container py-5">
-        <h1 class="mb-4 text-center">📋 Inventario Actual</h1>
+<body class="bg-light">
 
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Código</th>
-                        <th>Nombre</th>
-                        <th>Cantidad Disponible</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for producto in inventario %}
-                        <tr class="{% if producto[2] <= 5 %}low-stock{% else %}ok-stock{% endif %}">
-                            <td>{{ producto[0] }}</td>
-                            <td>{{ producto[1] }}</td>
-                            <td>{{ producto[2] }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+<div class="container mt-4">
+    <h1 class="mb-4 text-center">📋 Lista de Inventario</h1>
 
-        <div class="text-center mt-4">
-            <a href="/" class="btn btn-primary">⬅️ Volver al inicio</a>
-        </div>
-    </div>
+    <a href="/" class="btn btn-secondary mb-3">⬅️ Volver</a>
+
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark text-center">
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Cantidad</th>
+                <th>Alerta</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in inventario %}
+                <tr class="table-{{ item.alerta }}">
+                    <td class="text-center">{{ item.codigo }}</td>
+                    <td>{{ item.nombre }}</td>
+                    <td class="text-center">{{ item.cantidad }}</td>
+                    <td class="text-center">
+                        {% if item.alerta == 'danger' %}
+                            🔴 Crítico
+                        {% elif item.alerta == 'warning' %}
+                            🟠 Bajo stock
+                        {% else %}
+                            🟢 Suficiente
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
 </body>
 </html>
