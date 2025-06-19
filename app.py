@@ -3,35 +3,29 @@ import csv
 import os
 from datetime import datetime
 
-# --- Google Sheets ---
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
 app = Flask(__name__)
 CSV_FILE = 'inventario.csv'
+SPREADSHEET_NAME = 'Inventario en Tiempo Real'  # Reemplázalo con el nombre exacto de tu hoja
 
-# ---------------------- GOOGLE SHEETS FUNCIONES ----------------------
-def get_worksheet():
-    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    creds = ServiceAccountCredentials.from_json_keyfile_name('google_credentials.json', scope)
-    client = gspread.authorize(creds)
-    spreadsheet = client.open("Inventario en Tiempo Real")  # Asegúrate que este sea el nombre exacto
-    worksheet = spreadsheet.sheet1
-    return worksheet
+# Configuración de Google Sheets
+scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+credentials = ServiceAccountCredentials.from_json_keyfile_name('google_credentials.json', scope)
+gc = gspread.authorize(credentials)
 
-# ---------------------- INICIAR CSV SI NO EXISTE ----------------------
+# Crear CSV si no existe
 def init_csv():
     if not os.path.exists(CSV_FILE):
         with open(CSV_FILE, 'w', newline='', encoding='latin-1') as file:
             writer = csv.writer(file)
             writer.writerow(['Código', 'Nombre', 'Cantidad', 'Tipo', 'Fecha'])
 
-# ---------------------- RUTA PRINCIPAL ----------------------
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# ---------------------- GUARDAR PRODUCTO ----------------------
 @app.route('/guardar', methods=['POST'])
 def guardar():
     codigo = request.form['codigo']
@@ -47,14 +41,14 @@ def guardar():
 
     # Guardar en Google Sheets
     try:
-        worksheet = get_worksheet()
+        sh = gc.open(SPREADSHEET_NAME)
+        worksheet = sh.sheet1
         worksheet.append_row([codigo, nombre, cantidad, tipo, fecha])
     except Exception as e:
         print("Error al actualizar Google Sheets:", e)
 
     return redirect('/')
 
-# ---------------------- LISTAR INVENTARIO ----------------------
 @app.route('/lista')
 def lista():
     inventario = []
@@ -80,7 +74,6 @@ def lista():
 
     return render_template('lista.html', inventario=inventario)
 
-# ---------------------- BUSCAR PRODUCTO ----------------------
 @app.route('/buscar', methods=['GET', 'POST'])
 def buscar():
     resultado = None
@@ -97,12 +90,10 @@ def buscar():
                 resultado = []  # No encontrado
     return render_template('buscar.html', resultado=resultado)
 
-# ---------------------- DESCARGAR ARCHIVO ----------------------
 @app.route('/descargar')
 def descargar():
     return send_file(CSV_FILE, as_attachment=True)
 
-# ---------------------- INICIAR APP ----------------------
 if __name__ == '__main__':
     init_csv()
     port = int(os.environ.get("PORT", 5000))
