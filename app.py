@@ -1,17 +1,21 @@
 from flask import Flask, render_template, request, redirect, send_file
 import csv
 import os
+import json
 from datetime import datetime
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+from io import StringIO
 
 app = Flask(__name__)
 CSV_FILE = 'inventario.csv'
 SHEET_NAME = 'Inventario en Tiempo Real'
 
-# Conexión con Google Sheets
+# ✅ Conexión con Google Sheets usando variable de entorno
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-credentials = ServiceAccountCredentials.from_json_keyfile_name("google_credentials.json", scope)
+credentials_json = os.environ.get("GOOGLE_CREDENTIALS")  # Variable correcta en Render
+credentials_dict = json.loads(credentials_json)
+credentials = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, scope)
 client = gspread.authorize(credentials)
 sheet = client.open(SHEET_NAME).sheet1
 
@@ -33,7 +37,7 @@ def guardar():
     tipo = request.form['tipo']
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Guardar en el archivo CSV local
+    # Guardar en CSV local
     with open(CSV_FILE, 'a', newline='', encoding='latin-1') as file:
         writer = csv.writer(file)
         writer.writerow([codigo, nombre, cantidad, tipo, fecha])
@@ -51,26 +55,26 @@ def lista():
         with open(CSV_FILE, newline='', encoding='latin-1') as file:
             reader = csv.DictReader(file)
             for row in reader:
-                codigo = row['Código']
-                nombre = row['Nombre']
-                cantidad = int(row['Cantidad'])
-                tipo = row['Tipo']
-                fecha = row['Fecha']
+                try:
+                    codigo = row['Código']
+                    nombre = row['Nombre']
+                    cantidad = int(row['Cantidad'])
+                    tipo = row['Tipo']
+                except (KeyError, ValueError):
+                    continue
 
-                encontrado = next((item for item in inventario if item['codigo'] == codigo), None)
-                if encontrado:
-                    if tipo == "Entrada":
-                        encontrado['cantidad'] += cantidad
+                producto = next((p for p in inventario if p['codigo'] == codigo), None)
+
+                if producto:
+                    if tipo == 'Entrada':
+                        producto['cantidad'] += cantidad
                     else:
-                        encontrado['cantidad'] -= cantidad
+                        producto['cantidad'] -= cantidad
                 else:
-                    stock = cantidad if tipo == "Entrada" else -cantidad
-                    inventario.append({
-                        'codigo': codigo,
-                        'nombre': nombre,
-                        'cantidad': stock
-                    })
+                    stock = cantidad if tipo == 'Entrada' else -cantidad
+                    inventario.append({'codigo': codigo, 'nombre': nombre, 'cantidad': stock})
 
+    # Agregar alerta visual
     for item in inventario:
         if item['cantidad'] <= 0:
             item['alerta'] = 'danger'
@@ -94,7 +98,7 @@ def buscar():
                     resultado = fila
                     break
             if resultado is None:
-                resultado = []  # No encontrado
+                resultado = []
     return render_template('buscar.html', resultado=resultado)
 
 @app.route('/descargar')
