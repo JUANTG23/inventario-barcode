@@ -16,7 +16,7 @@ scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/au
 google_creds = json.loads(os.environ["GOOGLE_CREDENTIALS"])
 credentials = ServiceAccountCredentials.from_json_keyfile_dict(google_creds, scope)
 client = gspread.authorize(credentials)
-sheet = client.open("Inventario").sheet1
+sheet = client.open("Inventario en Tiempo Real").sheet1
 
 def guardar_producto(codigo, nombre, cantidad):
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
