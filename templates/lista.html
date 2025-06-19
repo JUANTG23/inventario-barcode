@@ -2,30 +2,32 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Inventario</title>
+    <title>Inventario en Tiempo Real</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
-<body>
-    <h1>Inventario Actual</h1>
-    
-    {% if inventario %}
-    <table border="1" cellpadding="10" cellspacing="0">
-        <tr>
-            <th>Código</th>
-            <th>Nombre</th>
-            <th>Cantidad</th>
-        </tr>
-        {% for item in inventario %}
-        <tr>
-            <td>{{ item.codigo }}</td>
-            <td>{{ item.nombre }}</td>
-            <td>{{ item.cantidad }}</td>
-        </tr>
-        {% endfor %}
+<body class="container mt-5">
+    <h1>Inventario en Tiempo Real</h1>
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Cantidad</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in productos %}
+            <tr>
+                <td>{{ p.codigo }}</td>
+                <td>{{ p.nombre }}</td>
+                <td>{{ p.cantidad }}</td>
+                <td>{{ p.fecha }}</td>
+                <td>{{ p.estado }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
-    {% else %}
-    <p>No hay productos en el inventario.</p>
-    {% endif %}
-
-    <p><a href="/">Volver al inicio</a></p>
 </body>
 </html>
