@@ -2,20 +2,24 @@ from flask import Flask, render_template, request, redirect, send_file
 import csv
 import os
 from datetime import datetime
-
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+import json
 
 app = Flask(__name__)
 CSV_FILE = 'inventario.csv'
-SPREADSHEET_NAME = 'Inventario en Tiempo Real'  # Reemplázalo con el nombre exacto de tu hoja
-
-# Configuración de Google Sheets
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-credentials = ServiceAccountCredentials.from_json_keyfile_name('google_credentials.json', scope)
-gc = gspread.authorize(credentials)
 
-# Crear CSV si no existe
+# Cargar credenciales desde variable de entorno
+credentials_json = os.environ.get("GOOGLE_CREDENTIALS")
+credentials_dict = json.loads(credentials_json)
+credentials = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, scope)
+client = gspread.authorize(credentials)
+
+# Abrir hoja de cálculo de Google
+spreadsheet = client.open("Inventario en Tiempo Real")
+sheet = spreadsheet.sheet1
+
 def init_csv():
     if not os.path.exists(CSV_FILE):
         with open(CSV_FILE, 'w', newline='', encoding='latin-1') as file:
@@ -34,18 +38,13 @@ def guardar():
     tipo = request.form['tipo']
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Guardar en CSV
+    # Guardar en archivo local CSV
     with open(CSV_FILE, 'a', newline='', encoding='latin-1') as file:
         writer = csv.writer(file)
         writer.writerow([codigo, nombre, cantidad, tipo, fecha])
 
     # Guardar en Google Sheets
-    try:
-        sh = gc.open(SPREADSHEET_NAME)
-        worksheet = sh.sheet1
-        worksheet.append_row([codigo, nombre, cantidad, tipo, fecha])
-    except Exception as e:
-        print("Error al actualizar Google Sheets:", e)
+    sheet.append_row([codigo, nombre, cantidad, tipo, fecha])
 
     return redirect('/')
 
@@ -87,7 +86,7 @@ def buscar():
                     resultado = fila
                     break
             if resultado is None:
-                resultado = []  # No encontrado
+                resultado = []
     return render_template('buscar.html', resultado=resultado)
 
 @app.route('/descargar')
