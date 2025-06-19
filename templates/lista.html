@@ -2,46 +2,45 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Inventario - Lista de Productos</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lista de Productos</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .low-stock {
+            background-color: #f8d7da !important;
+        }
+        .ok-stock {
+            background-color: #d4edda !important;
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
+    <div class="container py-5">
+        <h1 class="mb-4 text-center">📋 Inventario Actual</h1>
 
-<div class="container py-5">
-    <h1 class="text-center mb-4">📋 Lista de Productos</h1>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Cantidad Disponible</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in inventario %}
+                        <tr class="{% if producto[2] <= 5 %}low-stock{% else %}ok-stock{% endif %}">
+                            <td>{{ producto[0] }}</td>
+                            <td>{{ producto[1] }}</td>
+                            <td>{{ producto[2] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-    {% if inventario %}
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped table-hover">
-            <thead class="table-dark">
-                <tr>
-                    <th>Código</th>
-                    <th>Nombre</th>
-                    <th>Cantidad</th>
-                    <th>Fecha</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in inventario %}
-                <tr>
-                    <td>{{ item[0] }}</td>
-                    <td>{{ item[1] }}</td>
-                    <td>{{ item[2] }}</td>
-                    <td>{{ item[3] }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="text-center mt-4">
+            <a href="/" class="btn btn-primary">⬅️ Volver al inicio</a>
+        </div>
     </div>
-    {% else %}
-        <p class="text-center">No hay productos registrados.</p>
-    {% endif %}
-
-    <div class="d-grid gap-2 mt-4">
-        <a href="/" class="btn btn-primary">⬅️ Volver al inicio</a>
-    </div>
-</div>
-
 </body>
 </html>
