@@ -2,10 +2,34 @@ from flask import Flask, render_template, request, redirect, send_file
 import csv
 import os
 from datetime import datetime
+import json
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
 app = Flask(__name__)
 CSV_FILE = 'inventario.csv'
+SHEET_NAME = 'Inventario en Tiempo Real'
 
+# === Google Sheets Setup ===
+def conectar_google_sheets():
+    try:
+        google_creds = os.getenv("GOOGLE_CREDENTIALS")
+        if not google_creds:
+            raise ValueError("GOOGLE_CREDENTIALS no está configurado")
+        
+        credentials_dict = json.loads(google_creds)
+        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+        credentials = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, scope)
+        client = gspread.authorize(credentials)
+        sheet = client.open(SHEET_NAME).sheet1
+        return sheet
+    except Exception as e:
+        print(f"[ERROR] No se pudo conectar a Google Sheets: {e}")
+        return None
+
+sheet = conectar_google_sheets()
+
+# === Crear CSV si no existe ===
 def init_csv():
     if not os.path.exists(CSV_FILE):
         with open(CSV_FILE, 'w', newline='', encoding='latin-1') as file:
@@ -24,33 +48,45 @@ def guardar():
     tipo = request.form['tipo']
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    # Guardar localmente
     with open(CSV_FILE, 'a', newline='', encoding='latin-1') as file:
         writer = csv.writer(file)
         writer.writerow([codigo, nombre, cantidad, tipo, fecha])
+
+    # Guardar en Google Sheets
+    if sheet:
+        try:
+            sheet.append_row([codigo, nombre, cantidad, tipo, fecha])
+            print(f"[INFO] Producto {codigo} guardado en Google Sheets")
+        except Exception as e:
+            print(f"[ERROR] Falló al guardar en Google Sheets: {e}")
 
     return redirect('/')
 
 @app.route('/lista')
 def lista():
     inventario = []
+    movimientos = []
 
     if os.path.exists(CSV_FILE):
         with open(CSV_FILE, newline='', encoding='latin-1') as file:
-            reader = csv.reader(file)
-            next(reader, None)  # Saltar encabezado
+            reader = csv.DictReader(file)
             for row in reader:
-                codigo, nombre, cantidad, tipo, fecha = row
-                cantidad = int(cantidad)
+                codigo = row['Código']
+                nombre = row['Nombre']
+                cantidad = int(row['Cantidad'])
+                tipo = row['Tipo']
+                fecha = row['Fecha']
+                movimientos.append(row)
 
-                # Buscar si ya está ese producto en el inventario
                 encontrado = next((item for item in inventario if item['codigo'] == codigo), None)
                 if encontrado:
-                    if tipo == 'Entrada':
+                    if tipo == "Entrada":
                         encontrado['cantidad'] += cantidad
                     else:
                         encontrado['cantidad'] -= cantidad
                 else:
-                    stock = cantidad if tipo == 'Entrada' else -cantidad
+                    stock = cantidad if tipo == "Entrada" else -cantidad
                     inventario.append({
                         'codigo': codigo,
                         'nombre': nombre,
@@ -81,5 +117,5 @@ def descargar():
 
 if __name__ == '__main__':
     init_csv()
-    port = int(os.environ.get("PORT", 10000))
+    port = int(os.environ.get("PORT", 5000))
     app.run(debug=True, host='0.0.0.0', port=port)
