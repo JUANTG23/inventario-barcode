@@ -1,24 +1,28 @@
 from flask import Flask, render_template, request, redirect, send_file
 import csv
 import os
-import json
 from datetime import datetime
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from io import StringIO
+import json
 
 app = Flask(__name__)
 CSV_FILE = 'inventario.csv'
 SHEET_NAME = 'Inventario en Tiempo Real'
 
-# ✅ Conexión con Google Sheets usando variable de entorno
+# === CONEXIÓN CON GOOGLE SHEETS USANDO VARIABLE DE ENTORNO ===
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-credentials_json = os.environ.get("GOOGLE_CREDENTIALS")  # Variable correcta en Render
-credentials_dict = json.loads(credentials_json)
-credentials = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, scope)
+google_creds_json = os.getenv("GOOGLE_CREDENTIALS")
+
+if not google_creds_json:
+    raise ValueError("GOOGLE_CREDENTIALS no está definida en las variables de entorno")
+
+creds_dict = json.loads(google_creds_json)
+credentials = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(credentials)
 sheet = client.open(SHEET_NAME).sheet1
 
+# === INICIALIZAR CSV SI NO EXISTE ===
 def init_csv():
     if not os.path.exists(CSV_FILE):
         with open(CSV_FILE, 'w', newline='', encoding='latin-1') as file:
@@ -31,13 +35,13 @@ def index():
 
 @app.route('/guardar', methods=['POST'])
 def guardar():
-    codigo = request.form['codigo']
-    nombre = request.form['nombre']
+    codigo = request.form['codigo'].strip()
+    nombre = request.form['nombre'].strip()
     cantidad = int(request.form['cantidad'])
-    tipo = request.form['tipo']
+    tipo = request.form['tipo'].strip()
     fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Guardar en CSV local
+    # Guardar localmente en CSV
     with open(CSV_FILE, 'a', newline='', encoding='latin-1') as file:
         writer = csv.writer(file)
         writer.writerow([codigo, nombre, cantidad, tipo, fecha])
@@ -55,12 +59,16 @@ def lista():
         with open(CSV_FILE, newline='', encoding='latin-1') as file:
             reader = csv.DictReader(file)
             for row in reader:
+                # Validar campos vacíos
+                if not row.get('Código') or not row.get('Nombre') or not row.get('Cantidad') or not row.get('Tipo'):
+                    continue
+
                 try:
-                    codigo = row['Código']
-                    nombre = row['Nombre']
+                    codigo = row['Código'].strip()
+                    nombre = row['Nombre'].strip()
                     cantidad = int(row['Cantidad'])
-                    tipo = row['Tipo']
-                except (KeyError, ValueError):
+                    tipo = row['Tipo'].strip()
+                except (ValueError, KeyError):
                     continue
 
                 producto = next((p for p in inventario if p['codigo'] == codigo), None)
@@ -74,7 +82,7 @@ def lista():
                     stock = cantidad if tipo == 'Entrada' else -cantidad
                     inventario.append({'codigo': codigo, 'nombre': nombre, 'cantidad': stock})
 
-    # Agregar alerta visual
+    # Alertas visuales
     for item in inventario:
         if item['cantidad'] <= 0:
             item['alerta'] = 'danger'
@@ -89,7 +97,7 @@ def lista():
 def buscar():
     resultado = None
     if request.method == 'POST':
-        codigo_buscado = request.form['codigo']
+        codigo_buscado = request.form['codigo'].strip()
         with open(CSV_FILE, newline='', encoding='latin-1') as file:
             reader = csv.reader(file)
             next(reader, None)
@@ -98,7 +106,7 @@ def buscar():
                     resultado = fila
                     break
             if resultado is None:
-                resultado = []
+                resultado = []  # No encontrado
     return render_template('buscar.html', resultado=resultado)
 
 @app.route('/descargar')
